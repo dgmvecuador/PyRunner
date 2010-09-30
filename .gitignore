@@ -2,10 +2,8 @@
 #############################
 *.pyc
 
-# Music files
-menu.ogg
-endurance.ogg
-challenge.ogg
-
 #OSX Files
 .DS_Store
+
+# Configuration file
+pyRunner.cfg
