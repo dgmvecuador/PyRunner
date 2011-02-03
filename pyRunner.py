@@ -103,6 +103,7 @@ gameMode = None
 highScore = None
 highScoreName = None
 
+
 # Sound class
 def load_sound(name):
     class NoneSound:
@@ -136,20 +137,13 @@ def music_stop():
 def is_music_playing():
     return pygame.mixer.music.get_busy()
 
+
 class runner(pygame.sprite.Sprite):
     def __init__(self, screen):
         pygame.sprite.Sprite.__init__(self)
-        self.image_original = pygame.image.load(os.path.join(\
+        self.image = pygame.image.load(os.path.join(\
             "Resources","runner.bmp"))
-        self.image_original=self.image_original.convert()
-        self.image = self.image_original
-        
-        # Invisibility image
-        self.image_invincibility = pygame.image.load(os.path.join(\
-            "Resources","runner_invincibility.bmp"))
-        self.image_invincibility=self.image_invincibility.convert()
-        
-        #self.image = self.image.convert()
+        self.image = self.image.convert()
         self.rect = self.image.get_rect()
         self.rect.centerx = 70
         if not _debug:
@@ -243,12 +237,10 @@ class runner(pygame.sprite.Sprite):
         if self.invCount == 0:
             self.inv = False
             self.invCount = 800
-            self.image=self.image_original
         if self.shield == 0:
             self.kill()
     def invinc(self):
         self.inv = True
-        self.image=self.image_invincibility
         if self.invCount < 700:
             self.invCount = 800
      
@@ -737,7 +729,7 @@ def gameInit():
     ##INITIALIZATION CODE    
     mainLevelManager = levelManager()
     gunner = pygame.image.load(os.path.join(\
-            "Resources","Gunner.bmp"))
+            "Resources","gunner.bmp"))
     gunner = gunner.convert()
     gunner.set_colorkey((0,0,0))
     background = pygame.Surface((screen.get_width(), screen.get_height()))
@@ -1263,18 +1255,19 @@ def mainMenu():
             
             # Stop and play the correct music
             music_stop()
-            prepare_music_file("challenge.ogg")
+            prepare_music_file("challenge_new.ogg")
             music_play()
             
             gameInit()
             main()
             return
+        
         elif state == 6:
             gameMode = 'endurance'
             
             # Stop and play the correct music
             music_stop()
-            prepare_music_file("endurance.ogg")
+            prepare_music_file("endurance_new.ogg")
             music_play()
             
             gameInit()
