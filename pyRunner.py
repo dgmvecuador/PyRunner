@@ -19,7 +19,7 @@
 #       along with this program; if not, write to the Free Software
 #       Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #       MA 02110-1301, USA.
-
+	
 import pygame
 from pygame.locals import*
 #import key names
@@ -1354,16 +1354,8 @@ def highScoreLoad():
     if not ( config.has_section(score_type) ):
         # Creating the needed section.
         config.add_section(score_type)
-        config.set(score_type,"1", "0")
-        config.set(score_type,"2", "0")
-        config.set(score_type,"3", "0")
-        config.set(score_type,"4", "0")
-        config.set(score_type,"5", "0")
-        config.set(score_type,"6", "0")
-        config.set(score_type,"7", "0")
-        config.set(score_type,"8", "0")
-        config.set(score_type,"9", "0")
-        config.set(score_type,"10", "0")
+        for i in range(1,11):
+            config.set(score_type, str(i), "0")
         with open('pyRunner.cfg', 'wb') as configfile:
             config.write(configfile)
 
