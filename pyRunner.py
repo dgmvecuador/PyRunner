@@ -2,24 +2,24 @@
 # -*- coding: utf-8 -*-
 #
 #       pyRunner.py
-#       
+#
 #       Copyright 2010 dhatch387 (David Hatch) <dhatch387@gmail.com>
-#       
+#
 #       This program is free software; you can redistribute it and/or modify
 #       it under the terms of the GNU General Public License as published by
 #       the Free Software Foundation; either version 2 of the License, or
 #       (at your option) any later version.
-#       
+#
 #       This program is distributed in the hope that it will be useful,
 #       but WITHOUT ANY WARRANTY; without even the implied warranty of
 #       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #       GNU General Public License for more details.
-#       
+#
 #       You should have received a copy of the GNU General Public License
 #       along with this program; if not, write to the Free Software
 #       Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #       MA 02110-1301, USA.
-	
+
 import pygame
 from pygame.locals import*
 #import key names
@@ -55,7 +55,7 @@ pygame.init()
 #David:
 #-fixed significant bug where program would slow down when many cubes
 #were picked up in a row. was an error in pygame.sprite.GroupSingle class
-##CHANGELOG 0.8: 
+##CHANGELOG 0.8:
 #Brian:
 #-added in turrets,gun and bullets
 ##CHANGELOG 0.9:
@@ -129,7 +129,7 @@ def prepare_music_file(name):
 
 def music_play():
     pygame.mixer.music.play(-1)
-    
+
 def music_stop():
     pygame.mixer.music.stop()
 
@@ -161,19 +161,19 @@ class runner(pygame.sprite.Sprite):
         self.shots = 0
         self.invCount = 800
         self.ammo = 0
-        
+
         # Load the sound
         self.punch_sound = load_sound("punch.wav")
         self.explosion_sound = load_sound("explosion.wav")
 	self.gun_sound = load_sound("gunshot.wav")
-        
+
     def hit(self):
         if not self.inv:
             if not self.flash: #if not already flasshing from a collision
                 self.shield -= 1
                 self.punch_sound.play()
                 if not self.shield == 0:
-                    
+
                     debug("play")
                     self.flash = True #start flashing
                     self.count = 96 #for 96 frames
@@ -183,7 +183,7 @@ class runner(pygame.sprite.Sprite):
                     # Explosion when you lose.
                     for x in range(6):
                         self.gun_sound.play()
-                    
+
     def update(self):
         #set our own dy to scroller.dx minus 2
         self.dy = scroller.dx - 2
@@ -223,7 +223,7 @@ class runner(pygame.sprite.Sprite):
             self.count -= 1
             self.flashRate -= 1
             if self.flashRate == 0: #if the flash rate is 0 we toggle visiblity
-                if self.visible: 
+                if self.visible:
                     self.visible = False
                 else:
                     self.visible = True
@@ -244,7 +244,7 @@ class runner(pygame.sprite.Sprite):
         self.inv = True
         if self.invCount < 700:
             self.invCount = 800
-     
+
 #super class for all scrolling objects
 class scroller(pygame.sprite.Sprite):
     dx = 6
@@ -296,7 +296,7 @@ class bullet(scroller):
         self.angle = angle
         scroller.__init__(self)
         self.y = y+5
-        self.x = x+8 
+        self.x = x+8
         self.mag = 15
         self.rect = self.image.get_rect()
         self.rect.centery = self.y
@@ -341,7 +341,12 @@ class block(scroller):
         self.image = pygame.Surface((20, 90))
         self.rect = self.image.get_rect()
         self.y = y
-        pygame.draw.rect(self.image, (28,55,183), self.rect)
+
+        colors = [(155, 155, 155), (55, 55, 55), (0, 255, 0), (91, 81, 61)]
+        # a color is chosen at random
+        color = random.choice(colors)
+
+        pygame.draw.rect(self.image, color, self.rect)
         self.rect.right = pygame.display.get_surface().get_width()
         self.rect.centery = y
         #make sure the block is on the screen
@@ -355,6 +360,7 @@ class block(scroller):
         return self.y
     def __str__(self):
         return "block: ",self.y
+
 class cube(scroller):
     def __init__(self,y):
         scroller.__init__(self)
@@ -373,6 +379,7 @@ class cube(scroller):
         return self.y
     def hit(self):
         effectsGroup.add(fadeEffect(self.color))
+
 class scoreCube(cube):
     scoreProbabilites = [500,500,500,500,1000,1000,2000] #define probablility list for scores
     def __init__(self,y):
@@ -380,7 +387,7 @@ class scoreCube(cube):
         self.score = random.choice(self.scoreProbabilites)
         #define the image options
         self.colors = {500: (0,0,255),1000:(0,255,0),2000:(255,0,255)}
-        #choose a image corresponding with the score 
+        #choose a image corresponding with the score
         self.color = self.colors[self.score]
         #debug("scoreCube with y: "+str(y))
         cube.__init__(self,y) #call the initializer after these two commands
@@ -403,6 +410,7 @@ class shieldCube(cube):
     def __init__(self,y):
         self.color = (0,128,255)
         cube.__init__(self,y)
+
 class gun(scroller):
     def __init__(self,y,x):
         self.image = pygame.Surface((10,10))
@@ -425,6 +433,7 @@ class gun(scroller):
             self.kill()
         if not screen.get_rect().contains(self.image.get_rect()):
             self.kill()
+
 class ammoIndicator():
     def __init__(self):
         self.ammoNumber = 0 #define storage of shields
@@ -451,7 +460,8 @@ class ammoIndicator():
         self.displayedAmmo = self.ammoNumber #we are displaying the number
         return self.surface
     def setAmmo(self,ammo):
-        self.ammoNumber = ammo        
+        self.ammoNumber = ammo
+
 #class to layout and return a surface containing the shields indicator
 class shieldIndicator():
     def __init__(self):
@@ -546,7 +556,7 @@ class randomRezGroup(pygame.sprite.RenderUpdates):
               "\nself.maxInRow "+str(self.maxInRow))
     def update(self):
         #override update method to handle drawing of new rows if needed
-        if (self.lastRowPosition == -1 or self.lastRowPosition >=self.nextRowPosition) and self.active: 
+        if (self.lastRowPosition == -1 or self.lastRowPosition >=self.nextRowPosition) and self.active:
             #choose random locations for blocks based on maxBlockInRow
             spritesInRow = []
             for x in range(random.randint(1,self.maxInRow)):
@@ -555,7 +565,7 @@ class randomRezGroup(pygame.sprite.RenderUpdates):
                 spritesInRow.append(self.templateClass(random.randint(\
                                                     self.maxRezHeight,\
                                                       self.minRezHeight)))
-                
+
             self.add(spritesInRow)
             #check for minBlockDistance compliance
             orderedSprites = sorted(spritesInRow,key=self.templateClass.y)
@@ -599,7 +609,7 @@ class levelManager(object):
     def add(self,level): #add a level to the levels list
         self.levelList.append(level)
         level.number = len(self.levelList)-1
-        if level.speed > self.maxSpeed: #maxSpeed of level assignment 
+        if level.speed > self.maxSpeed: #maxSpeed of level assignment
             self.maxSpeed = level.speed
         if self.minSpeed == 0:
             self.minSpeed = level.speed
@@ -667,7 +677,7 @@ class level(object):
             key.active = values[4]
         scroller.dx = self.speed #set speed
 
-            
+
 #debug function
 _debug = False
 _die = True
@@ -686,13 +696,13 @@ def init():
         screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
     # Ignore mouse motion (greatly reduces resources when not needed)
     pygame.event.set_blocked(pygame.MOUSEMOTION)
-    
+
     # Hide the mouse cursor
     pygame.mouse.set_visible(False)
-    
+
     # Load config file
     #highScoreLoad()
-    
+
     clock = pygame.time.Clock()
 
 def gameInit():
@@ -730,14 +740,14 @@ def gameInit():
     #Globals defined in mainMenu()
     global gameMode
     global score_type
-    ##INITIALIZATION CODE    
+    ##INITIALIZATION CODE
     mainLevelManager = levelManager()
     gunner = pygame.image.load(os.path.join(\
             "Resources","Gunner.bmp"))
     gunner = gunner.convert()
     gunner.set_colorkey((0,0,0))
     background = pygame.Surface((screen.get_width(), screen.get_height()))
-    pygame.draw.rect(background, (0,0,0), background.get_rect())
+    pygame.draw.rect(background, (10,10,10), background.get_rect())
     #only nessecary if not fullscreen
     pygame.display.set_caption("pyRunner 2D")
     keepGoing = True
@@ -781,19 +791,21 @@ def gameInit():
     gunnerGroup = pygame.sprite.RenderUpdates()
     ##LEVEL CREATION AND DESIGN
     if gameMode == "endurance":
-        mainLevelManager.add(level({blockGroup:[2,100,200,75,True],cubeGroup:[1,700,2000,300,True],\
-                                    invGroup:[1,2000,5000,300,False],shieldGroup:[1,1000,3000,300,False],turretGroup:[1,1000,2000,300,False]\
-                                    ,gunGroup:[1,50,50,50,False]},6,800))
-        mainLevelManager.add(level({},7,800))
-        mainLevelManager.add(level({blockGroup:[3,100,200,75,True]},7,1200))
-        mainLevelManager.add(level({shieldGroup:[1,4000,7000,300,True]},8,800))
-        mainLevelManager.add(level({gunGroup:[1,3000,7000,300,True]},8,600))
-        mainLevelManager.add(level({invGroup:[1,5000,10000,300,True]},8,1200))
-        mainLevelManager.add(level({turretGroup:[1,3000,5000,300,True]},8,3500))
-        mainLevelManager.add(level({turretGroup:[1,2000,4000,300,True]},8,2000))
-        mainLevelManager.add(level({blockGroup:[1,100,200,75,True],shieldGroup:[1,450,600,300,True]},16,600))
-        mainLevelManager.add(level({blockGroup:[3,75,200,75,True],shieldGroup:[1,4000,7000,300,True]},9,3200))
-        mainLevelManager.add(level({blockGroup:[4,50,250,75,True],shieldGroup:[1,450,600,300,True],invGroup:[1,6000,8000,300,True]},11,4000))
+        add = mainLevelManager.add
+        add(level({blockGroup:[2,100,200,75,True],cubeGroup:[1,700,2000,300,True],
+                   invGroup:[1,2000,5000,300,False],shieldGroup:[1,1000,3000,300,False],
+                   turretGroup:[1,1000,2000,300,False],gunGroup:[1,50,50,50,False]},6,800))
+        add(level({},7,800))
+        add(level({blockGroup:[3,100,200,75,True]},7,1200))
+        add(level({shieldGroup:[1,4000,7000,300,True]},8,800))
+        add(level({gunGroup:[1,3000,7000,300,True]},8,600))
+        add(level({invGroup:[1,5000,10000,300,True]},8,1200))
+        add(level({turretGroup:[1,3000,5000,300,True]},8,3500))
+        add(level({turretGroup:[1,2000,4000,300,True]},8,2000))
+        add(level({blockGroup:[1,100,200,75,True],shieldGroup:[1,450,600,300,True]},16,600))
+        add(level({blockGroup:[3,75,200,75,True],shieldGroup:[1,4000,7000,300,True]},9,3200))
+        add(level({blockGroup:[4,50,250,75,True],shieldGroup:[1,450,600,300,True],invGroup:[1,6000,8000,300,True]},11,4000))
+
     elif gameMode == "challenge":
         mainLevelManager.add(level({blockGroup:[3,75,200,75,True],cubeGroup:[1,700,2000,300,True],\
                                     invGroup:[1,10000,20000,300,True],shieldGroup:[1,8000,15000,300,True],turretGroup:[1,2000,4000,300,True]\
@@ -821,7 +833,7 @@ def gameInit():
     #tracking of last row
     invInd = progressIndicator((255,255,255),"")
 
-def main():    
+def main():
     global screen
     ##VARS DEFINED IN gameInit()
     global mainLevelManager
@@ -900,17 +912,19 @@ def main():
                     pass
         if rungroup.sprite: #if runner dies before our loop is over we don't
             #want an error
-            pygame.sprite.groupcollide(gunnerGroup,blockGroup,True,True)
-            pygame.sprite.groupcollide(gunnerGroup,cubeGroup,True,True)
-            pygame.sprite.groupcollide(gunnerGroup,shieldGroup,True,True)
-            pygame.sprite.groupcollide(gunnerGroup,invGroup,True,True)
-            pygame.sprite.groupcollide(gunnerGroup,turretGroup,True,True)
-            pygame.sprite.groupcollide(gunnerGroup,gunGroup,True,True)
-            pygame.sprite.groupcollide(bulletGroup,blockGroup,False,True)
-            pygame.sprite.groupcollide(bulletGroup,cubeGroup,False,True)
-            pygame.sprite.groupcollide(bulletGroup,shieldGroup,False,True)
-            pygame.sprite.groupcollide(bulletGroup,invGroup,False,True)
-            pygame.sprite.groupcollide(bulletGroup,gunGroup,False,True)
+            groupcollide = pygame.sprite.groupcollide
+            groupcollide(gunnerGroup,blockGroup,True,True)
+            groupcollide(gunnerGroup,cubeGroup,True,True)
+            groupcollide(gunnerGroup,shieldGroup,True,True)
+            groupcollide(gunnerGroup,invGroup,True,True)
+            groupcollide(gunnerGroup,turretGroup,True,True)
+            groupcollide(gunnerGroup,gunGroup,True,True)
+            groupcollide(bulletGroup,blockGroup,False,True)
+            groupcollide(bulletGroup,cubeGroup,False,True)
+            groupcollide(bulletGroup,shieldGroup,False,True)
+            groupcollide(bulletGroup,invGroup,False,True)
+            groupcollide(bulletGroup,gunGroup,False,True)
+
             collided = pygame.sprite.spritecollide(rungroup.sprite,bulletGroup,True)
             for x in collided:
                 rungroup.sprite.hit()
@@ -1073,7 +1087,7 @@ def pause():
     # a small portion of it changed!)
     rect_list = []
     # The main while loop
-    while 1:
+    while True:
         # Check if the state has changed, if it has, then post a user event to
         # the queue to force the menu to be shown at least once
         if prev_state != state:
@@ -1105,8 +1119,8 @@ def pause():
 
         # Update the screen
         pygame.display.update(rect_list)
-    
-        
+
+
 def endMenu():
     global selected
     global menu
@@ -1215,15 +1229,15 @@ def mainMenu():
     rect_list = []
     title = pygame.image.load(os.path.join("Resources","pyRunnerTitle.gif"))
     title = title.convert()
-    
+
     # Test if it is playing a music
     if is_music_playing():
         music_stop()
-    
+
     # Prepare music for menu
     prepare_music_file("menu.ogg")
     music_play()
-    
+
     # The main while loop
     while 1:
       # Check if the state has changed, if it has, then post a user event to
@@ -1231,7 +1245,7 @@ def mainMenu():
       if prev_state != state:
          pygame.event.post(pygame.event.Event(EVENT_CHANGE_STATE, key = 0))
          prev_state = state
-      
+
       # Get the next event
       e = pygame.event.wait()
       # Update the menu, based on which "state" we are in - When using the menu
@@ -1268,7 +1282,7 @@ def mainMenu():
             return
         elif state == 5:
             gameMode = 'challenge'
-            
+
             # Stop and play the correct music
             music_stop()
             prepare_music_file("challenge_new.ogg")
@@ -1276,14 +1290,14 @@ def mainMenu():
 	    # Set game type for score
 	    score_type = 'challenge'
             highScoreLoad()
-            
+
             gameInit()
             main()
             return
-        
+
         elif state == 6:
             gameMode = 'endurance'
-            
+
             # Stop and play the correct music
             music_stop()
             prepare_music_file("endurance_new.ogg")
@@ -1291,7 +1305,7 @@ def mainMenu():
 	    # Set game type for score
 	    score_type = 'endurance'
             highScoreLoad()
-            
+
             gameInit()
             main()
             return
@@ -1332,7 +1346,7 @@ def mainMenu():
       if e.type == pygame.QUIT:
          quitGame()
          return
-      rect_list.append(screen.blit(title,(screen.get_rect().centerx-250,0)))  
+      rect_list.append(screen.blit(title,(screen.get_rect().centerx-250,0)))
 
       # Update the screen
       pygame.display.update(rect_list)
@@ -1341,7 +1355,7 @@ def highScoreLoad():
     global highScore
     #score_type is set when the mode of play is determined ("challenge" for example).
     global score_type
-   
+
     #If the file does not exist, create it
     if ( os.path.isfile('pyRunner.cfg') is False ):
         config = ConfigParser.RawConfigParser()
@@ -1367,13 +1381,13 @@ def ranking(score):
 
     config = ConfigParser.ConfigParser()
     config.readfp(open('pyRunner.cfg'))
-   
+
     for i in range(1, 11):
-	if ( int(score) > int(config.get(score_type, str(i))) ): 
+	if ( int(score) > int(config.get(score_type, str(i))) ):
 	    #store the value I am about to replace
 	    replaced_score = config.get(score_type, str(i))
 	    #replace the value in the list
-	    config.set(score_type, str(i), str(int(score))) 
+	    config.set(score_type, str(i), str(int(score)))
 	    with open('pyRunner.cfg', 'wb') as configfile:
 		config.write(configfile)
 	    #find the replaced score's new place in the list
