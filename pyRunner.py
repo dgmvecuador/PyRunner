@@ -1192,8 +1192,8 @@ def endMenu():
 
     # Quit if the user presses the exit button
     if e.type == pygame.QUIT:
-       quitGame()
-       return
+        quitGame()
+        return
 
     # Update the screen
     pygame.display.update(rect_list)
@@ -1240,116 +1240,118 @@ def mainMenu():
 
     # The main while loop
     while 1:
-      # Check if the state has changed, if it has, then post a user event to
-      # the queue to force the menu to be shown at least once
-      if prev_state != state:
+        # Check if the state has changed, if it has, then post a user event to
+        # the queue to force the menu to be shown at least once
+        if prev_state != state:
          pygame.event.post(pygame.event.Event(EVENT_CHANGE_STATE, key = 0))
          prev_state = state
 
-      # Get the next event
-      e = pygame.event.wait()
-      # Update the menu, based on which "state" we are in - When using the menu
-      # in a more complex program, definitely make the states global variables
-      # so that you can refer to them by a name
-      if e.type == pygame.KEYDOWN or e.type == EVENT_CHANGE_STATE:
-        if state == 0:
-            rect_list, state = menu.update(e, state)
-        elif state == 1:
-            screen.fill((0,0,0))
-            rect_list.append(screen.get_rect())
-            menu = cMenu(0,0,20,10,'vertical',5,screen,
-            [('Endurance',6,None),
-            ('Challenge',5,None),
-            ('Back',7,None)])
-            menu.set_center(True, True)
-            menu.set_alignment('center', 'center')
-            state = 0
-            prev_state = 1
-        elif state == 3:
-            screen.fill((0,0,0))
-            rect_list.append(screen.get_rect())
-            menu = cMenu(0,0,20,10,'vertical',5,screen,[(u'Code by Brian Erying, David Hatch and Diego Estévez',7,None),\
-                                                        ('Images by Dan Austin',7,None),\
-                                                        ('Press enter to return',7,None)])
-            menu.set_center(True, True)
-            menu.set_alignment('center', 'center')
-            menu.set_selected_color((255,255,255))
-            state = 0
-            prev_state = 1
-        elif state == 4:
-            debug("exit")
+        # Get the next event
+        e = pygame.event.wait()
+        # Update the menu, based on which "state" we are in - When using the menu
+        # in a more complex program, definitely make the states global variables
+        # so that you can refer to them by a name
+        if e.type == pygame.KEYDOWN or e.type == EVENT_CHANGE_STATE:
+            if state == 0:
+                rect_list, state = menu.update(e, state)
+            elif state == 1:
+                screen.fill((0,0,0))
+                rect_list.append(screen.get_rect())
+                menu = cMenu(0,0,20,10,'vertical',5,screen,
+                [('Endurance',6,None),
+                ('Challenge',5,None),
+                ('Back',7,None)])
+                menu.set_center(True, True)
+                menu.set_alignment('center', 'center')
+                state = 0
+                prev_state = 1
+            elif state == 3:
+                screen.fill((0,0,0))
+                rect_list.append(screen.get_rect())
+                menu = cMenu(0,0,20,10,'vertical',5,screen,[(u'Code by Brian Erying, David Hatch and Diego Estévez',7,None),\
+                                                            ('Images by Dan Austin',7,None),\
+                                                            ('Press enter to return',7,None)])
+                menu.set_center(True, True)
+                menu.set_alignment('center', 'center')
+                menu.set_selected_color((255,255,255))
+                state = 0
+                prev_state = 1
+            elif state == 4:
+                debug("exit")
+                quitGame()
+                return
+            elif state == 5:
+                gameMode = 'challenge'
+
+                # Stop and play the correct music
+                music_stop()
+                prepare_music_file("challenge_new.ogg")
+                music_play()
+                # Set game type for score
+                score_type = 'challenge'
+                highScoreLoad()
+
+                gameInit()
+                main()
+                return
+
+            elif state == 6:
+                gameMode = 'endurance'
+
+                # Stop and play the correct music
+                music_stop()
+                prepare_music_file("endurance_new.ogg")
+                music_play()
+                # Set game type for score
+                score_type = 'endurance'
+                highScoreLoad()
+
+                gameInit()
+                main()
+                return
+            elif state == 7:
+                screen.fill((0,0,0))
+                rect_list.append(screen.get_rect())
+                menu = cMenu(0, 0, 20, 10, 'vertical', 5, screen,
+                            [('Play Game', 1, None),
+                             #r('High Scores',2,None),
+                             ('About',3,None),
+                             ('How to play',8,None),
+                             ('Quit', 4, None)])
+                # Center the menu on the draw_surface (the entire screen here)
+                menu.set_center(True, True)
+                # Center the menu on the draw_surface (the entire screen here)
+                menu.set_alignment('center', 'center')
+                state = 0
+                prev_state = 1
+            elif state == 8:
+                screen.fill((0,0,0))
+                rect_list.append(screen.get_rect())
+                menu = cMenu(0,0,0,5,'vertical',10,screen,[('How to play:',7,None),\
+                                                            ('Use the up and down arrow keys to avoid the solid blocks, enemies, and bullets.',7,None),\
+                                                            ('Gain points and special abilities from the hollow cubes.',7,None),\
+                                                            ('',7,None),\
+                                                            ('Special abilities:',7,None),\
+                                                            ('Light blue = extra shield',7,None),\
+                                                            ('Red = gun',7,None),\
+                                                            ('White = invincibility',7,None),\
+                                                            ('',7,None),\
+                                                            ('Press enter to return',7,None)])
+                menu.set_center(True, True)
+                menu.set_alignment('center', 'center')
+                menu.set_selected_color((255,255,255))
+                state = 0
+                prev_state = 1
+
+        # Quit if the user presses the exit button
+        if e.type == pygame.QUIT:
             quitGame()
             return
-        elif state == 5:
-            gameMode = 'challenge'
 
-            # Stop and play the correct music
-            music_stop()
-            prepare_music_file("challenge_new.ogg")
-            music_play()
-            # Set game type for score
-            score_type = 'challenge'
-            highScoreLoad()
+        rect_list.append(screen.blit(title,(screen.get_rect().centerx - title.get_rect().centerx, 0)))
 
-            gameInit()
-            main()
-            return
-
-        elif state == 6:
-            gameMode = 'endurance'
-
-            # Stop and play the correct music
-            music_stop()
-            prepare_music_file("endurance_new.ogg")
-            music_play()
-            # Set game type for score
-            score_type = 'endurance'
-            highScoreLoad()
-
-            gameInit()
-            main()
-            return
-        elif state == 7:
-            screen.fill((0,0,0))
-            rect_list.append(screen.get_rect())
-            menu = cMenu(0, 0, 20, 10, 'vertical', 5, screen,
-                        [('Play Game', 1, None),
-                         #r('High Scores',2,None),
-                         ('About',3,None),
-                         ('How to play',8,None),
-                         ('Quit', 4, None)])
-            # Center the menu on the draw_surface (the entire screen here)
-            menu.set_center(True, True)
-            # Center the menu on the draw_surface (the entire screen here)
-            menu.set_alignment('center', 'center')
-            state = 0
-            prev_state = 1
-        elif state == 8:
-            screen.fill((0,0,0))
-            rect_list.append(screen.get_rect())
-            menu = cMenu(0,0,0,5,'vertical',10,screen,[('How to play:',7,None),\
-                                                        ('Use the up and down arrow keys to avoid the solid blocks, enemies, and bullets.',7,None),\
-                                                        ('Gain points and special abilities from the hollow cubes.',7,None),\
-                                                        ('',7,None),\
-                                                        ('Special abilities:',7,None),\
-                                                        ('Light blue = extra shield',7,None),\
-                                                        ('Red = gun',7,None),\
-                                                        ('White = invincibility',7,None),\
-                                                        ('',7,None),\
-                                                        ('Press enter to return',7,None)])
-            menu.set_center(True, True)
-            menu.set_alignment('center', 'center')
-            menu.set_selected_color((255,255,255))
-            state = 0
-            prev_state = 1
-      # Quit if the user presses the exit button
-      if e.type == pygame.QUIT:
-         quitGame()
-         return
-      rect_list.append(screen.blit(title,(screen.get_rect().centerx - title.get_rect().centerx, 0)))
-
-      # Update the screen
-      pygame.display.update(rect_list)
+        # Update the screen
+        pygame.display.update(rect_list)
 
 def highScoreLoad():
     global highScore
