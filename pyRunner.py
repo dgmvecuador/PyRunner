@@ -1346,7 +1346,7 @@ def mainMenu():
       if e.type == pygame.QUIT:
          quitGame()
          return
-      rect_list.append(screen.blit(title,(screen.get_rect().centerx-250,0)))
+      rect_list.append(screen.blit(title,(screen.get_rect().centerx - title.get_rect().centerx,0)))
 
       # Update the screen
       pygame.display.update(rect_list)
