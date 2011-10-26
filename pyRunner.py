@@ -181,7 +181,7 @@ class runner(pygame.sprite.Sprite):
                     mainLevelManager.fallback(400)
                 else:
                     # Explosion when you lose.
-                    for x in range(6):
+                    for x in xrange(6):
                         self.gun_sound.play()
 
     def update(self):
@@ -454,7 +454,7 @@ class ammoIndicator():
         self.surface.fill((0,0,0))
         count = self.fontSurface.get_width() + 5
         self.surface.blit(self.fontSurface,(0,0))
-        for x in range(self.ammoNumber): #build surface
+        for x in xrange(self.ammoNumber): #build surface
             self.surface.blit(self.cubeTemplate,(count,0))
             count += 15
         self.displayedAmmo = self.ammoNumber #we are displaying the number
@@ -483,7 +483,7 @@ class shieldIndicator():
         self.surface.fill((0,0,0))
         count = self.fontSurface.get_width() + 5
         self.surface.blit(self.fontSurface,(0,0))
-        for x in range(self.shieldNumber): #build surface
+        for x in xrange(self.shieldNumber): #build surface
             self.surface.blit(self.cubeTemplate,(count,0))
             count += 35
         self.displayedShields = self.shieldNumber #we are displaying the number
@@ -559,7 +559,7 @@ class randomRezGroup(pygame.sprite.RenderUpdates):
         if (self.lastRowPosition == -1 or self.lastRowPosition >=self.nextRowPosition) and self.active:
             #choose random locations for blocks based on maxBlockInRow
             spritesInRow = []
-            for x in range(random.randint(1,self.maxInRow)):
+            for x in xrange(random.randint(1,self.maxInRow)):
                 #randomly choose how many blocks to create
                 #randomly select block positions and add to group
                 spritesInRow.append(self.templateClass(random.randint(\
@@ -1174,7 +1174,7 @@ def endMenu():
             rect_list.append(screen.blit(highScoreSurface,(screen.get_rect().centerx-(highScoreSurface.get_width()/2.), \
             (screen.get_rect().centery)-(fontSurface.get_height())-80)))
 
-	    for i in range(2,11):
+	    for i in xrange(2,11):
                 scores = font.render(get_scores(str(i)),True,(255,255,255))
                 rect_list.append(screen.blit(scores,(screen.get_rect().centerx-(scores.get_width()/2.), \
                 (screen.get_rect().centery)-(fontSurface.get_height())+(i*25))))
@@ -1368,7 +1368,7 @@ def highScoreLoad():
     if not ( config.has_section(score_type) ):
         # Creating the needed section.
         config.add_section(score_type)
-        for i in range(1,11):
+        for i in xrange(1,11):
             config.set(score_type, str(i), "0")
         with open('pyRunner.cfg', 'wb') as configfile:
             config.write(configfile)
@@ -1382,7 +1382,7 @@ def ranking(score):
     config = ConfigParser.ConfigParser()
     config.readfp(open('pyRunner.cfg'))
 
-    for i in range(1, 11):
+    for i in xrange(1, 11):
 	if ( int(score) > int(config.get(score_type, str(i))) ):
 	    #store the value I am about to replace
 	    replaced_score = config.get(score_type, str(i))
