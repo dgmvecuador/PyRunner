@@ -31,7 +31,7 @@ import sys
 import math
 import ConfigParser
 from menu import *
-from classes import *
+import classes
 if platform.system() == 'Windows':
     os.environ['SDL_VIDEODRIVER'] = 'windib'
 # Change the mixer to proper values.
