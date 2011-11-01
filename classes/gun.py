@@ -1,3 +1,5 @@
+from scroller import *
+
 class gun(scroller):
     def __init__(self,y,x):
         self.image = pygame.Surface((10,10))

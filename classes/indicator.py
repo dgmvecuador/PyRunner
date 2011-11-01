@@ -1,3 +1,6 @@
+import pygame, os
+from functions import *
+
 class ammoIndicator():
     def __init__(self):
         self.ammoNumber = 0 #define storage of shields

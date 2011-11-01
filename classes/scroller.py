@@ -1,3 +1,5 @@
+import pygame
+
 #super class for all scrolling objects
 class scroller(pygame.sprite.Sprite):
     dx = 6

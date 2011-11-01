@@ -1,3 +1,6 @@
+import pygame
+from functions import *
+
 #class that displays color and then fades out
 class fadeEffect(pygame.sprite.Sprite):
     def __init__(self,color):

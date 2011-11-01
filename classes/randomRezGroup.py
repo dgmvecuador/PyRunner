@@ -1,3 +1,6 @@
+import pygame
+from functions import *
+
 #special group class to manage rezzing of objects that are randomly created, objects in the group must have a initialalizer of (self,y)
 class randomRezGroup(pygame.sprite.RenderUpdates):
     def __init__(self,templateClass,maxRezHeight,minRezHeight,maxInRow=3,minDistance=75,minRowDistance=100,\

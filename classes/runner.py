@@ -1,3 +1,10 @@
+import pygame
+from pygame.locals import*
+#import key names
+from pygame.key import *
+import os, sys
+from functions import *
+
 class runner(pygame.sprite.Sprite):
     def __init__(self, screen):
         pygame.sprite.Sprite.__init__(self)
@@ -6,7 +13,7 @@ class runner(pygame.sprite.Sprite):
         self.image = self.image.convert()
         self.rect = self.image.get_rect()
         self.rect.centerx = 70
-        if not _debug:
+        if not is_debug():
             self.rect.centerx = 120
         self.rect.centery = screen.get_rect().centery
         self.dy = 4
@@ -26,7 +33,7 @@ class runner(pygame.sprite.Sprite):
         # Load the sound
         self.punch_sound = load_sound("punch.wav")
         self.explosion_sound = load_sound("explosion.wav")
-    self.gun_sound = load_sound("gunshot.wav")
+        self.gun_sound = load_sound("gunshot.wav")
 
     def hit(self):
         if not self.inv:

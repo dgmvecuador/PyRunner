@@ -1,3 +1,5 @@
+from scroller import *
+
 class block(scroller):
     def __init__(self, y):
         scroller.__init__(self)

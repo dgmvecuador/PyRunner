@@ -1,3 +1,5 @@
+from scroller import *
+
 class cube(scroller):
     def __init__(self,y):
         scroller.__init__(self)
@@ -44,3 +46,6 @@ class invCube(cube):
         cube.__init__(self,y)
 
 class shieldCube(cube):
+    def __init__(self,y):
+        self.color = (0,128,255)
+        cube.__init__(self,y)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#       pyRunner.py
+#       pyRunner2.py
 #
 #       Copyright 2010 dhatch387 (David Hatch) <dhatch387@gmail.com>
 #
@@ -31,7 +31,20 @@ import sys
 import math
 import ConfigParser
 from menu import *
-from classes import *
+#from classes import *
+from classes.scroller import *
+from classes.runner import *
+from classes.turret import *
+from classes.bullet import *
+from classes.fadeEffect import *
+from classes.block import *
+from classes.cubes import *
+from classes.gun import *
+from classes.indicator import *
+from classes.WorkingSingle import *
+from classes.levels import *
+from classes.randomRezGroup import *
+from classes.functions import *
 if platform.system() == 'Windows':
     os.environ['SDL_VIDEODRIVER'] = 'windib'
 # Change the mixer to proper values.
@@ -104,53 +117,15 @@ gameMode = None
 highScore = None
 score_type = None
 
-# Sound class
-def load_sound(name):
-    class NoneSound:
-        def play(self): pass
-    if not pygame.mixer or not pygame.mixer.get_init():
-        return NoneSound()
-    fullname = os.path.join('Resources', name)
-    try:
-        sound = pygame.mixer.Sound(fullname)
-    except pygame.error, message:
-        print 'Cannot load sound:', fullname
-        raise SystemExit, message
-    return sound
-
-#Music support:
-def prepare_music_file(name):
-    fullname = os.path.join('Resources', 'music', name)
-    try:
-        pygame.mixer.music.load(fullname)
-        #print "Music file %s loaded!" % fullname
-    except pygame.error:
-        print "File %s not found! (%s)" % (fullname, pygame.get_error())
-    return
-
-def music_play():
-    pygame.mixer.music.play(-1)
-
-def music_stop():
-    pygame.mixer.music.stop()
-
-def is_music_playing():
-    return pygame.mixer.music.get_busy()
-
-
 #debug function
-_debug = False
 _die = True
-def debug(printstring):
-    if _debug:
-        print printstring
 
 def init():
     #create screen
     global screen
     global clock
     global score_type
-    if(_debug):
+    if(is_debug()):
         screen = pygame.display.set_mode((600, 820))
     else:
         screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
@@ -164,6 +139,7 @@ def init():
     #highScoreLoad()
 
     clock = pygame.time.Clock()
+
 
 def gameInit():
     global screen
@@ -294,6 +270,7 @@ def gameInit():
     invInd = progressIndicator((255,255,255),"")
 
 
+    
 def main():
     global screen
     ##VARS DEFINED IN gameInit()

@@ -1,3 +1,5 @@
+from scroller import *
+
 class turret(scroller):
     def __init__(self,y):
         self.image = pygame.Surface((55,32))
@@ -28,8 +30,8 @@ class turret(scroller):
             bulletGroup.add(bullet(self.rect.centerx,self.rect.centery,self.angle))
         self.gun_sound = load_sound("gunshot.wav")
         self.gun_sound.play()
-            debug(str(bulletGroup))
-            self.count = 0
+        debug(str(bulletGroup))
+        self.count = 0
         if self.rect.right < 0: #same code to delete self if off screen as block
             self.kill()
             del self

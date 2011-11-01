@@ -1,3 +1,5 @@
+from scroller import *
+
 class bullet(scroller):
     def __init__(self,x,y,angle):
         self.image = pygame.Surface((10,10))

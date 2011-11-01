@@ -1,8 +1,0 @@
-class WorkingSingle(pygame.sprite.Group):
-    def add(self,*sprites):
-        self.empty()
-        try:
-            spriteAdd = sprites[0]
-        except IndexError:
-            return None
-        super(WorkingSingle, self).add(spriteAdd)
