@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#       pyRunner.py
+#       pyRunner2.py
 #
 #       Copyright 2010 dhatch387 (David Hatch) <dhatch387@gmail.com>
 #
@@ -31,6 +31,20 @@ import sys
 import math
 import ConfigParser
 from menu import *
+#from classes import *
+from classes.scroller import *
+from classes.runner import *
+from classes.turret import *
+from classes.bullet import *
+from classes.fadeEffect import *
+from classes.block import *
+from classes.cubes import *
+from classes.gun import *
+from classes.indicator import *
+from classes.WorkingSingle import *
+from classes.levels import *
+from classes.randomRezGroup import *
+from classes.functions import *
 if platform.system() == 'Windows':
     os.environ['SDL_VIDEODRIVER'] = 'windib'
 # Change the mixer to proper values.
@@ -103,594 +117,15 @@ gameMode = None
 highScore = None
 score_type = None
 
-# Sound class
-def load_sound(name):
-    class NoneSound:
-        def play(self): pass
-    if not pygame.mixer or not pygame.mixer.get_init():
-        return NoneSound()
-    fullname = os.path.join('Resources', name)
-    try:
-        sound = pygame.mixer.Sound(fullname)
-    except pygame.error, message:
-        print 'Cannot load sound:', fullname
-        raise SystemExit, message
-    return sound
-
-#Music support:
-def prepare_music_file(name):
-    fullname = os.path.join('Resources', 'music', name)
-    try:
-        pygame.mixer.music.load(fullname)
-        #print "Music file %s loaded!" % fullname
-    except pygame.error:
-        print "File %s not found! (%s)" % (fullname, pygame.get_error())
-    return
-
-def music_play():
-    pygame.mixer.music.play(-1)
-
-def music_stop():
-    pygame.mixer.music.stop()
-
-def is_music_playing():
-    return pygame.mixer.music.get_busy()
-
-
-class runner(pygame.sprite.Sprite):
-    def __init__(self, screen):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load(os.path.join(\
-            "Resources","runner.bmp"))
-        self.image = self.image.convert()
-        self.rect = self.image.get_rect()
-        self.rect.centerx = 70
-        if not _debug:
-            self.rect.centerx = 120
-        self.rect.centery = screen.get_rect().centery
-        self.dy = 4
-        self.flash = False #are we flashing (invunrable after collision)
-        self.shield = 3 #how much is left in our shield
-        self.count = 0 #this is the count for the flashing
-        self.visible = True #do we want to be visible (next update)
-        self.isvisible = True #are we actually visible
-        self.flashRate = 8 #number of frames it will take to toggle the flash
-        self.inv = False
-        self.gun = 0
-        self.last_shot = 10
-        self.shots = 0
-        self.invCount = 800
-        self.ammo = 0
-
-        # Load the sound
-        self.punch_sound = load_sound("punch.wav")
-        self.explosion_sound = load_sound("explosion.wav")
-	self.gun_sound = load_sound("gunshot.wav")
-
-    def hit(self):
-        if not self.inv:
-            if not self.flash: #if not already flasshing from a collision
-                self.shield -= 1
-                self.punch_sound.play()
-                if not self.shield == 0:
-
-                    debug("play")
-                    self.flash = True #start flashing
-                    self.count = 96 #for 96 frames
-                    effectsGroup.add(fadeEffect((255,0,0)))
-                    mainLevelManager.fallback(400)
-                else:
-                    # Explosion when you lose.
-                    for x in xrange(6):
-                        self.gun_sound.play()
-
-    def update(self):
-        #set our own dy to scroller.dx minus 2
-        self.dy = scroller.dx - 2
-        key = pygame.key.get_pressed()
-        #key up and down events
-        if key[K_UP]:
-            self.rect.centery += -self.dy
-        if key[K_DOWN]:
-            self.rect.centery += self.dy
-        if key[K_SPACE]:
-            if self.gun > 1:
-                debug("reload")
-                self.shots = 0
-                self.gun = 1
-                self.ammo = 10
-            elif self.gun == 1:
-                debug(self.gun)
-                if self.shots > 9:
-                    self.shots = 0
-                    self.gun = 0
-                    self.ammo = 0
-                else:
-                    self.last_shot +=1
-                    if self.last_shot >= 10:
-                        self.shots +=1
-                        gunnerGroup.add(gun(self.rect.centery,self.rect.centerx))
-                        self.last_shot = 0
-                        debug("gunnerGroup" + str(gunnerGroup))
-                        self.ammo -= 1
-			self.gun_sound.play()
-        #clip to our max and min heights created when we make borders
-        if self.rect.top < max_height+1:
-            self.rect.top = max_height+1
-        if self.rect.bottom > min_height-1:
-            self.rect.bottom = min_height-1
-        if self.flash:
-            self.count -= 1
-            self.flashRate -= 1
-            if self.flashRate == 0: #if the flash rate is 0 we toggle visiblity
-                if self.visible:
-                    self.visible = False
-                else:
-                    self.visible = True
-                self.flashRate = 8
-        if self.visible != self.isvisible: #if the wanted visible is different
-            self.image.set_alpha(255*self.visible)
-            self.isvisible = self.visible
-        if self.count == 0:
-            self.flash = False #stop flashing when we are finished
-        if self.inv:
-            self.invCount -= 1
-        if self.invCount == 0:
-            self.inv = False
-            self.invCount = 800
-        if self.shield == 0:
-            self.kill()
-    def invinc(self):
-        self.inv = True
-        if self.invCount < 700:
-            self.invCount = 800
-
-#super class for all scrolling objects
-class scroller(pygame.sprite.Sprite):
-    dx = 6
-    def __init__(self):
-        pygame.sprite.Sprite.__init__(self)
-    def update(self):
-        self.rect.centerx -= self.dx
-screen = None
-class turret(scroller):
-    def __init__(self,y):
-        self.image = pygame.Surface((55,32))
-        self.angle = random.randint(-45,45)
-        self.top = random.randint(0,1)
-        global top
-        top = self.top
-        self.rect = self.image.get_rect()
-        debug(str(self.rect.centerx))
-        scroller.__init__(self)
-        self.count = 0
-        self.x = self.rect.centerx
-        if self.top == 1:
-            self.rect.top = max_height+1
-            self.image.blit(pygame.transform.rotate(gunner,self.angle),(self.rect.centerx-15,-15,0,0))
-        else:
-            self.rect.bottom = min_height-1
-            self.angle += 180
-            self.image.blit(pygame.transform.rotate(gunner,self.angle),(self.rect.centerx-15,0,0,0))
-        self.rect.right = pygame.display.get_surface().get_width()
-        debug(str(self.angle))
-    def y(self): #y accessor
-        return self.y
-    def update(self):
-        scroller.update(self)
-        self.count += 1
-        if self.count == 25:
-            bulletGroup.add(bullet(self.rect.centerx,self.rect.centery,self.angle))
-	    self.gun_sound = load_sound("gunshot.wav")
-	    self.gun_sound.play()
-            debug(str(bulletGroup))
-            self.count = 0
-        if self.rect.right < 0: #same code to delete self if off screen as block
-            self.kill()
-            del self
-class bullet(scroller):
-    def __init__(self,x,y,angle):
-        self.image = pygame.Surface((10,10))
-        pygame.draw.circle(self.image, (255,145,35), (5,5), 5)
-        self.color = ((255,145,35))
-        self.angle = angle
-        scroller.__init__(self)
-        self.y = y+5
-        self.x = x+8
-        self.mag = 15
-        self.rect = self.image.get_rect()
-        self.rect.centery = self.y
-        self.rect.centerx = self.x
-        pygame.draw.rect(self.image, self.color,self.rect,3)
-        self._dy = math.cos(math.radians(self.angle))*self.mag
-        self._dx = math.sin(math.radians(self.angle))*self.mag
-    def update(self):
-        scroller.update(self)
-        self.rect.centery += self._dy
-        self.rect.centerx += self._dx
-        if top == 1:
-            if self.rect.centery > min_height:
-                self.kill()
-        if top == 0:
-            if self.rect.centery < max_height:
-                self.kill()
-        if not screen.get_rect().contains(self.image.get_rect()):
-            self.kill()
-#class that displays color and then fades out
-class fadeEffect(pygame.sprite.Sprite):
-    def __init__(self,color):
-        pygame.sprite.Sprite.__init__(self)
-        #create a surface matching the display size
-        self.image = pygame.Surface(pygame.display.get_surface().get_size())
-        #fill
-        self.image.fill(color)
-        self.rect = self.image.get_rect()
-        self.alpha = 96 #match this with the flash count of the runner
-    def update(self):
-        self.image.set_alpha(self.alpha)
-        #update alpha and decrease every frame
-        self.alpha -= 1
-        if self.alpha == 0:
-            self.kill()
-    def kill(self):
-        debug("KILLED ME")
-        pygame.sprite.Sprite.kill(self)
-class block(scroller):
-    def __init__(self, y):
-        scroller.__init__(self)
-        self.image = pygame.Surface((20, 90))
-        self.rect = self.image.get_rect()
-        self.y = y
-
-        colors = [(155, 155, 155), (55, 55, 55), (0, 255, 0), (91, 81, 61)]
-        # a color is chosen at random
-        color = random.choice(colors)
-
-        pygame.draw.rect(self.image, color, self.rect)
-        self.rect.right = pygame.display.get_surface().get_width()
-        self.rect.centery = y
-        #make sure the block is on the screen
-        #debug("block with center y of {0:n}".format(self.rect.centery))
-    def update(self):
-        scroller.update(self)
-        if self.rect.right < 0:
-            self.kill()
-            del self
-    def y(self):
-        return self.y
-    def __str__(self):
-        return "block: ",self.y
-
-class cube(scroller):
-    def __init__(self,y):
-        scroller.__init__(self)
-        self.image = pygame.Surface((20,20))
-        self.rect = self.image.get_rect()
-        pygame.draw.rect(self.image, self.color,self.rect,3)
-        self.y = y
-        self.rect.right = pygame.display.get_surface().get_width()
-        self.rect.centery = self.y
-    def update(self):
-        scroller.update(self)
-        if self.rect.right < 0: #same code to delete self if off screen as block
-            self.kill()
-            del self
-    def y(self): #y accessor
-        return self.y
-    def hit(self):
-        effectsGroup.add(fadeEffect(self.color))
-
-class scoreCube(cube):
-    scoreProbabilites = [500,500,500,500,1000,1000,2000] #define probablility list for scores
-    def __init__(self,y):
-        #choose a random score
-        self.score = random.choice(self.scoreProbabilites)
-        #define the image options
-        self.colors = {500: (0,0,255),1000:(0,255,0),2000:(255,0,255)}
-        #choose a image corresponding with the score
-        self.color = self.colors[self.score]
-        #debug("scoreCube with y: "+str(y))
-        cube.__init__(self,y) #call the initializer after these two commands
-    def score(self): #score accessor
-        return self.score
-class gunCube(cube):
-    def __init__(self,y):
-        self.color=(255,0,0)
-        cube.__init__(self,y)
-    def hit(self):
-        rungroup.sprite.gun += 1
-        debug(str(rungroup.sprite.gun))
-
-class invCube(cube):
-    def __init__(self,y):
-        self.color = (255,255,255)
-        cube.__init__(self,y)
-
-class shieldCube(cube):
-    def __init__(self,y):
-        self.color = (0,128,255)
-        cube.__init__(self,y)
-
-class gun(scroller):
-    def __init__(self,y,x):
-        self.image = pygame.Surface((10,10))
-        self.color = (255,100,0)
-        self.y = y
-        self.x = x
-        pygame.draw.circle(self.image, self.color, (5,5), 5)
-        self.rect = self.image.get_rect()
-        self.rect.centerx = self.x
-        self.rect.centery = self.y
-        scroller.__init__(self)
-        self._dx = 15
-        pygame.draw.rect(self.image, self.color,self.rect,3)
-        self.shots = 10
-    def update(self):
-        global screen
-        scroller.update(self)
-        self.rect.centerx += self._dx
-        if self.rect.centerx > pygame.display.get_surface().get_width():
-            self.kill()
-        if not screen.get_rect().contains(self.image.get_rect()):
-            self.kill()
-
-class ammoIndicator():
-    def __init__(self):
-        self.ammoNumber = 0 #define storage of shields
-        self.cubeTemplate = pygame.image.load(os.path.join("Resources",\
-                                                           "bulletInd.gif"))
-        self.cubeTemplate = self.cubeTemplate.convert()
-        self.surface = None #location to store our surface
-        self.displayedAmmo = 0#number of shields displayed
-        self.font = pygame.font.Font(None,18)
-        self.fontSurface = self.font.render("Ammo: ",True,(255,255,255))
-    def getSurface(self): #prepare and output a surface with the shields
-        if self.surface and self.displayedAmmo == self.ammoNumber:
-            return self.surface #if we don't need to make a surface return the
-        #old one
-        elif not self.surface: #make a surface if we need one
-            self.surface = pygame.Surface(((155+self.fontSurface.get_width()),10))
-            self.surface.fill((0,0,0)) #fill with the bg color
-        self.surface.fill((0,0,0))
-        count = self.fontSurface.get_width() + 5
-        self.surface.blit(self.fontSurface,(0,0))
-        for x in xrange(self.ammoNumber): #build surface
-            self.surface.blit(self.cubeTemplate,(count,0))
-            count += 15
-        self.displayedAmmo = self.ammoNumber #we are displaying the number
-        return self.surface
-    def setAmmo(self,ammo):
-        self.ammoNumber = ammo
-
-#class to layout and return a surface containing the shields indicator
-class shieldIndicator():
-    def __init__(self):
-        self.shieldNumber = 0 #define storage of shields
-        self.cubeTemplate = pygame.image.load(os.path.join("Resources",\
-                                                           "blue square.bmp"))
-        self.cubeTemplate = self.cubeTemplate.convert()
-        self.surface = None #location to store our surface
-        self.displayedShields = 0#number of shields displayed
-        self.font = pygame.font.Font(None,18)
-        self.fontSurface = self.font.render("Shields: ",True,(255,255,255))
-    def getSurface(self): #prepare and output a surface with the shields
-        if self.surface and self.displayedShields == self.shieldNumber:
-            return self.surface #if we don't need to make a surface return the
-        #old one
-        elif not self.surface: #make a surface if we need one
-            self.surface = pygame.Surface(((105+self.fontSurface.get_width()),10))
-            self.surface.fill((0,0,0)) #fill with the bg color
-        self.surface.fill((0,0,0))
-        count = self.fontSurface.get_width() + 5
-        self.surface.blit(self.fontSurface,(0,0))
-        for x in xrange(self.shieldNumber): #build surface
-            self.surface.blit(self.cubeTemplate,(count,0))
-            count += 35
-        self.displayedShields = self.shieldNumber #we are displaying the number
-        return self.surface
-    def setShield(self,shield):
-        self.shieldNumber = shield
-
-#class to layout and create the bar
-class progressIndicator():
-    def __init__(self,color,label):
-        self.percent = 0 #define storage of percent
-        self.surface = None #location to store our surface
-        self.displayedPercent = 0#number of percentage displayed
-        self.label = label
-        self.font = pygame.font.Font(None,18)
-        self.fontSurface = self.font.render(self.label,True,(255,255,255))
-        self.color = color
-    def getSurface(self): #prepare and output a surface with the shields
-        if self.surface and self.percent == self.displayedPercent:
-            return self.surface #if we don't need to make a surface return the
-        #old one
-        elif not self.surface: #make a surface if we need one
-            self.surface = pygame.Surface(((105+self.fontSurface.get_width()),15))
-        self.surface.fill((0,0,0))
-        self.surface.blit(self.fontSurface,(0,0))
-        box = pygame.rect.Rect((self.fontSurface.get_width()+5,0,100,10))
-        boxFill = box.move(1,1)
-        boxFill.width = ((self.percent/100.0)*99)-1
-        boxFill.height -= 1
-        pygame.draw.rect(self.surface,self.color,box,1)
-        if self.percent != 0:
-            pygame.draw.rect(self.surface,self.color,boxFill)
-        self.displayedPercent = self.percent #we are displaying the number
-        return self.surface
-    def setPercentage(self,percent):
-        self.percent = percent
-        debug(str(self.percent))
-
-#The pygame GroupSingle has a error in its code such that when a sprite is added to the group, the other sprites will cause some form of memory leak instead
-#of being properly disposed of. This class emulates the behavior of the GroupSingle's add method but functions properly.
-class WorkingSingle(pygame.sprite.Group):
-    def add(self,*sprites):
-        self.empty()
-        try:
-            spriteAdd = sprites[0]
-        except IndexError:
-            return None
-        super(WorkingSingle, self).add(spriteAdd)
-
-#special group class to manage rezzing of objects that are randomly created, objects in the group must have a initialalizer of (self,y)
-class randomRezGroup(pygame.sprite.RenderUpdates):
-    def __init__(self,templateClass,maxRezHeight,minRezHeight,maxInRow=3,minDistance=75,minRowDistance=100,\
-                 maxRowDistance=200,active=True):
-        pygame.sprite.RenderUpdates.__init__(self)
-        #initialize this
-        self.nextRowPosition = 0
-        #this signals the draw method to create its first row
-        self.lastRowPosition = -1
-        #assign some instance variables
-        self.templateClass = templateClass
-        self.minDistance = minDistance
-        self.minRowDistance = minRowDistance
-        self.maxRowDistance = maxRowDistance
-        self.maxRezHeight = maxRezHeight
-        self.minRezHeight = minRezHeight
-        self.maxInRow = maxInRow
-        self.active = active
-        debug("self.templateClass "+str(self.templateClass)+"\nself.minDistance "+str(self.minDistance)+"\nself.minRowDistance "+str(self.minRowDistance)+\
-              "\nself.maxRowDistance "+str(self.maxRowDistance)+"\nself.maxRezHeight "+str(self.maxRezHeight)+"\nself.minRezHeight "+str(self.minRezHeight)+\
-              "\nself.maxInRow "+str(self.maxInRow))
-    def update(self):
-        #override update method to handle drawing of new rows if needed
-        if (self.lastRowPosition == -1 or self.lastRowPosition >=self.nextRowPosition) and self.active:
-            #choose random locations for blocks based on maxBlockInRow
-            spritesInRow = []
-            for x in xrange(random.randint(1,self.maxInRow)):
-                #randomly choose how many blocks to create
-                #randomly select block positions and add to group
-                spritesInRow.append(self.templateClass(random.randint(\
-                                                    self.maxRezHeight,\
-                                                      self.minRezHeight)))
-
-            self.add(spritesInRow)
-            #check for minBlockDistance compliance
-            orderedSprites = sorted(spritesInRow,key=self.templateClass.y)
-            #go through ordered sprites and check for distance compliance
-            i = -1 #counter variable
-            for x in orderedSprites:
-                if i >= 0: #ignore first one
-                    topSprite = orderedSprites[i].rect.bottom #list is ordered
-                    #in top to bottom order by position, this is the higher up
-                    #one. we get its bottom x position
-                    bottomSprite = x.rect.top #get the top position of the lower
-                    #sprite
-                    #debug("topSprite: {0:n}\nbottomSprite: {1:n}".format(\
-                        #topSprite,bottomSprite))
-                    if (bottomSprite - topSprite) < self.minDistance: #check
-                        #for correct distance and if nessecary delete the sprite
-                        x.kill()
-                        #debug("sprite distance kill")
-                i += 1
-            #randomly choose our next row position
-            self.nextRowPosition = random.randint(self.minRowDistance,\
-                                             self.maxRowDistance)
-            #track our just created last row
-            self.lastRowPosition = 0
-        #last row position increases by scroller.dx every frame
-        self.lastRowPosition += scroller.dx
-        return pygame.sprite.RenderUpdates.update(self)
-
-#class to manage leveling
-class levelManager(object):
-    def __init__(self):
-        #instance variables
-        self.currentLevel = 1
-        self.frameCount = 0
-        self.framesTillNext = 0
-        self.levelList = []
-        self.activeLevel = None
-        self.maxSpeed = 0
-        self.minSpeed = 0
-        self.speedInd = None
-    def add(self,level): #add a level to the levels list
-        self.levelList.append(level)
-        level.number = len(self.levelList)-1
-        if level.speed > self.maxSpeed: #maxSpeed of level assignment
-            self.maxSpeed = level.speed
-        if self.minSpeed == 0:
-            self.minSpeed = level.speed
-        if level.speed < self.minSpeed:
-            self.minSpeed = level.speed
-        debug("maxSpeed: "+str(self.maxSpeed)+"\nminSpeed: "+str(self.minSpeed))
-    def setLevel(self, levelNum): #set the level to the levelNum level in the
-        #list and make it active, also set the framesTillNext to next level
-        try:
-            self.activeLevel = self.levelList[levelNum-1]
-            self.currentLevel = levelNum
-        except IndexError:
-            debug("no more levels, fellback to current")
-        self.activeLevel.makeActive()
-        self.framesTillNext = self.activeLevel.length
-        debug("scroller.dx:"+str(scroller.dx))
-        if self.speedInd:
-            if len(self.levelList) == 1:
-                self.speedInd.setPercentage(100)
-            else:
-                self.speedInd.setPercentage(((self.activeLevel.speed-self.minSpeed)/float(self.maxSpeed-self.minSpeed))*100)
-    def frame(self):#called every frame
-        self.frameCount += 1
-        self.framesTillNext -= 1
-        if self.framesTillNext == 0:
-            debug("advanced to level: " + str(self.currentLevel+1))
-            self.setLevel(self.currentLevel+1) #if there are no frames left
-            #go to the next level
-    def setIndicator(self,indicator):
-        self.speedInd = indicator
-    def fallback(self, time): #fallback to a level for a specified time
-        if not self.currentLevel == 1:
-            self.setLevel(self.currentLevel-1)
-            self.framesTillNext = time
-
-#special class which describes a level and its attributes
-#can also set the level if given the appropriate objects via enableLevel'
-##LEVEL IS INITIALIZED AS SO:
-##    attributes is a dictionary containing keys which are the groups to set,the
-##    value must be a list which contains values in order for the randomRezGroup
-##    (which is the key)
-##    values are as so:
-##        -maxInRow
-##        -minDistanceBetweenRow
-##        -maxDistanceBetweenRow
-##        -maxDistanceBetweenBlocks
-##        -also takes a speed attribute
-##        -active
-class level(object):
-    def __init__(self,attributes,speed,length):
-        #assign instance variables
-        self.attributes = attributes
-        self.speed = speed
-        self.number = 0 #empty variable which will store our level number
-        self.length = length
-        #assigned by manager
-    def makeActive(self):
-        for key in self.attributes: #go through keys in dictionary and assign
-            #values
-            values = self.attributes[key]
-            key.minDistance = values[3]
-            key.minRowDistance = values[1]
-            key.maxRowDistance = values[2]
-            key.maxInRow = values[0]
-            key.active = values[4]
-        scroller.dx = self.speed #set speed
-
-
 #debug function
-_debug = False
 _die = True
-def debug(printstring):
-    if _debug:
-        print printstring
 
 def init():
     #create screen
     global screen
     global clock
     global score_type
-    if(_debug):
+    if(is_debug()):
         screen = pygame.display.set_mode((600, 820))
     else:
         screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
@@ -704,6 +139,7 @@ def init():
     #highScoreLoad()
 
     clock = pygame.time.Clock()
+
 
 def gameInit():
     global screen
@@ -833,6 +269,8 @@ def gameInit():
     #tracking of last row
     invInd = progressIndicator((255,255,255),"")
 
+
+    
 def main():
     global screen
     ##VARS DEFINED IN gameInit()
@@ -1174,7 +612,7 @@ def endMenu():
             rect_list.append(screen.blit(highScoreSurface,(screen.get_rect().centerx-(highScoreSurface.get_width()/2.), \
             (screen.get_rect().centery)-(fontSurface.get_height())-80)))
 
-	    for i in xrange(2,11):
+            for i in xrange(2,11):
                 scores = font.render(get_scores(str(i)),True,(255,255,255))
                 rect_list.append(screen.blit(scores,(screen.get_rect().centerx-(scores.get_width()/2.), \
                 (screen.get_rect().centery)-(fontSurface.get_height())+(i*25))))
@@ -1192,8 +630,8 @@ def endMenu():
 
       # Quit if the user presses the exit button
       if e.type == pygame.QUIT:
-         quitGame()
-         return
+            quitGame()
+            return
 
       # Update the screen
       pygame.display.update(rect_list)
@@ -1287,8 +725,8 @@ def mainMenu():
             music_stop()
             prepare_music_file("challenge_new.ogg")
             music_play()
-	    # Set game type for score
-	    score_type = 'challenge'
+            # Set game type for score
+            score_type = 'challenge'
             highScoreLoad()
 
             gameInit()
@@ -1302,8 +740,8 @@ def mainMenu():
             music_stop()
             prepare_music_file("endurance_new.ogg")
             music_play()
-	    # Set game type for score
-	    score_type = 'endurance'
+            # Set game type for score
+            score_type = 'endurance'
             highScoreLoad()
 
             gameInit()
@@ -1343,13 +781,13 @@ def mainMenu():
             state = 0
             prev_state = 1
       # Quit if the user presses the exit button
-      if e.type == pygame.QUIT:
-         quitGame()
-         return
-      rect_list.append(screen.blit(title,(screen.get_rect().centerx - title.get_rect().centerx,0)))
+    if e.type == pygame.QUIT:
+        quitGame()
+        return
+        rect_list.append(screen.blit(title,(screen.get_rect().centerx - title.get_rect().centerx,0)))
 
-      # Update the screen
-      pygame.display.update(rect_list)
+    # Update the screen
+    pygame.display.update(rect_list)
 
 def highScoreLoad():
     global highScore
@@ -1383,17 +821,17 @@ def ranking(score):
     config.readfp(open('pyRunner.cfg'))
 
     for i in xrange(1, 11):
-	if ( int(score) > int(config.get(score_type, str(i))) ):
-	    #store the value I am about to replace
-	    replaced_score = config.get(score_type, str(i))
-	    #replace the value in the list
-	    config.set(score_type, str(i), str(int(score)))
-	    with open('pyRunner.cfg', 'wb') as configfile:
-		config.write(configfile)
-	    #find the replaced score's new place in the list
-	    ranking(replaced_score)
-	    #immediatly end the loop when the recursion unwinds
-	    break
+        if ( int(score) > int(config.get(score_type, str(i))) ):
+            #store the value I am about to replace
+            replaced_score = config.get(score_type, str(i))
+            #replace the value in the list
+            config.set(score_type, str(i), str(int(score)))
+            with open('pyRunner.cfg', 'wb') as configfile:
+                config.write(configfile)
+                #find the replaced score's new place in the list
+                ranking(replaced_score)
+                #immediatly end the loop when the recursion unwinds
+                break
 
 def get_scores(standing):
     global score_type
@@ -1405,7 +843,7 @@ def get_scores(standing):
 
 def quitGame():
     pygame.display.quit()
-
+      
 if __name__ == "__main__":
     init()
     mainMenu()
